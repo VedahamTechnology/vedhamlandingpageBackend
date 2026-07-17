@@ -7,6 +7,19 @@ require("dotenv").config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+const escapeHtml = (value = "") =>
+  String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+
+const formatMultiline = (value = "") =>
+  escapeHtml(value).replace(/\n/g, "<br>");
+
+const isMissing = (value) => value === undefined || value === null || String(value).trim() === "";
+
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
@@ -14,18 +27,28 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 // Health check route
 app.get("/", (req, res) => {
-  res.json({ message: "Gita Mediline Backend API is running" });
+  res.json({ message: "Vedaham Technology Backend API is running" });
 });
 
 // Contact form route
 app.post("/api/contact", async (req, res) => {
-  const { name, email, phone, subject, message } = req.body;
+  const { name, email, phone, subject, projectBudget, message, companyName } =
+    req.body;
 
   // Validation
-  if (!name || !email || !phone || !subject || !message) {
+  if (
+    isMissing(name) ||
+    isMissing(email) ||
+    isMissing(phone) ||
+    isMissing(subject) ||
+    isMissing(projectBudget) ||
+    isMissing(message) ||
+    isMissing(companyName)
+  ) {
     return res.status(400).json({
       success: false,
-      error: "All fields are required",
+      error:
+        "All fields are required: name, email, phone, subject, projectBudget, message, and companyName",
     });
   }
 
@@ -44,96 +67,112 @@ app.post("/api/contact", async (req, res) => {
     // Email to company
     const mailOptionsToCompany = {
       from: process.env.EMAIL_USER,
-      to: 'gitamediline@gmail.com',
-      subject: `New Contact Form: ${subject}`,
+      to: "gitamediline@gmail.com",
+      subject: `🚀 New Project Inquiry: ${subject} - ${companyName}`,
+
       html: `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <style>
-            body {
-              font-family: Arial, sans-serif;
-              line-height: 1.6;
-              color: #333;
-            }
-            .container {
-              max-width: 600px;
-              margin: 0 auto;
-              padding: 20px;
-              background-color: #f9f9f9;
-              border-radius: 10px;
-            }
-            .header {
-              background: linear-gradient(135deg, #2563eb 0%, #06b6d4 100%);
-              color: white;
-              padding: 20px;
-              border-radius: 10px 10px 0 0;
-              text-align: center;
-            }
-            .content {
-              background: white;
-              padding: 30px;
-              border-radius: 0 0 10px 10px;
-            }
-            .field {
-              margin-bottom: 20px;
-              padding-bottom: 15px;
-              border-bottom: 1px solid #eee;
-            }
-            .label {
-              font-weight: bold;
-              color: #2563eb;
-              margin-bottom: 5px;
-            }
-            .value {
-              color: #333;
-            }
-            .footer {
-              text-align: center;
-              margin-top: 20px;
-              color: #666;
-              font-size: 12px;
-            }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <div class="header">
-              <h2>🏥 New Contact Form Submission</h2>
-              <p>Gita Mediline Services</p>
-            </div>
-            <div class="content">
-              <div class="field">
-                <div class="label">👤 Name:</div>
-                <div class="value">${name}</div>
-              </div>
-              
-              <div class="field">
-                <div class="label">📧 Email:</div>
-                <div class="value"><a href="mailto:${email}">${email}</a></div>
-              </div>
-              
-              <div class="field">
-                <div class="label">📱 Phone:</div>
-                <div class="value"><a href="tel:${phone}">${phone}</a></div>
-              </div>
-              
-              <div class="field">
-                <div class="label">📋 Subject:</div>
-                <div class="value">${subject}</div>
-              </div>
-              
-              <div class="field">
-                <div class="label">💬 Message:</div>
-                <div class="value">${message.replace(/\n/g, "<br>")}</div>
-              </div>
-            </div>
-            <div class="footer">
-              <p>This email was sent from the Gita Mediline website contact form.</p>
-            </div>
-          </div>
-        </body>
-        </html>
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+body{
+font-family:Arial,sans-serif;
+background:#f4f7fb;
+color:#333;
+}
+.container{
+max-width:650px;
+margin:auto;
+background:#fff;
+border-radius:10px;
+overflow:hidden;
+box-shadow:0 5px 15px rgba(0,0,0,.1);
+}
+.header{
+background:#0F172A;
+color:#fff;
+padding:25px;
+text-align:center;
+}
+.content{
+padding:30px;
+}
+.field{
+margin-bottom:18px;
+}
+.label{
+font-weight:bold;
+color:#2563EB;
+margin-bottom:5px;
+}
+.footer{
+background:#f8fafc;
+padding:20px;
+text-align:center;
+font-size:13px;
+color:#666;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="header">
+<h2>🚀 New Website Inquiry</h2>
+<p>Vedaham Technology</p>
+</div>
+
+<div class="content">
+
+<p>You have received a new inquiry from your website.</p>
+
+<div class="field">
+<div class="label">👤 Name</div>
+<div>${escapeHtml(name)}</div>
+</div>
+
+<div class="field">
+<div class="label">📧 Email</div>
+<div>${escapeHtml(email)}</div>
+</div>
+
+<div class="field">
+<div class="label">📱 Phone</div>
+<div>${escapeHtml(phone)}</div>
+</div>
+
+<div class="field">
+<div class="label">📌 Service Requested</div>
+<div>${escapeHtml(subject)}</div>
+</div>
+
+<div class="field">
+<div class="label">🏢 Company Name</div>
+<div>${escapeHtml(companyName)}</div>
+</div>
+
+<div class="field">
+<div class="label">💰 Project Budget</div>
+<div>${escapeHtml(projectBudget)}</div>
+</div>
+
+<div class="field">
+<div class="label">💬 Project Details</div>
+<div>${formatMultiline(message)}</div>
+</div>
+
+</div>
+
+<div class="footer">
+Submitted through the Vedaham Technology website.
+</div>
+
+</div>
+
+</body>
+</html>
       `,
     };
 
@@ -141,82 +180,206 @@ app.post("/api/contact", async (req, res) => {
     const mailOptionsToUser = {
       from: process.env.EMAIL_USER,
       to: email,
-      subject: "Thank you for contacting Gita Mediline Services",
+      subject: "Thank You for Contacting Vedaham Technology",
+
       html: `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <style>
-            body {
-              font-family: Arial, sans-serif;
-              line-height: 1.6;
-              color: #333;
-            }
-            .container {
-              max-width: 600px;
-              margin: 0 auto;
-              padding: 20px;
-              background-color: #f9f9f9;
-            }
-            .header {
-              background: linear-gradient(135deg, #2563eb 0%, #06b6d4 100%);
-              color: white;
-              padding: 30px;
-              text-align: center;
-              border-radius: 10px 10px 0 0;
-            }
-            .content {
-              background: white;
-              padding: 30px;
-              border-radius: 0 0 10px 10px;
-            }
-            .button {
-              display: inline-block;
-              padding: 12px 30px;
-              background: linear-gradient(135deg, #2563eb 0%, #06b6d4 100%);
-              color: white;
-              text-decoration: none;
-              border-radius: 25px;
-              margin-top: 20px;
-            }
-            .contact-info {
-              background: #f0f9ff;
-              padding: 20px;
-              border-radius: 10px;
-              margin-top: 20px;
-            }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <div class="header">
-              <h1>🏥 Gita Mediline Services</h1>
-              <p>Medical Gas & Modular OT Infrastructure Specialists</p>
-            </div>
-            <div class="content">
-              <h2>Thank You, ${name}!</h2>
-              <p>We have received your message and will get back to you within 24 hours.</p>
-              
-              <p><strong>Your message:</strong></p>
-              <p style="background: #f9f9f9; padding: 15px; border-left: 4px solid #2563eb;">
-                ${message.replace(/\n/g, "<br>")}
-              </p>
-              
-              <div class="contact-info">
-                <h3>Contact Us Directly:</h3>
-                <p>📞 <a href="tel:+917067534498">+91 70675 34498</a></p>
-                <p>📞 <a href="tel:+917389112339">+91 73891 12339</a></p>
-                <p>📧 <a href="mailto:gitamediline@gmail.com">gitamediline@gmail.com</a></p>
-              </div>
-              
-              <p style="margin-top: 20px;">
-                <strong>ISO 9001:2015 & CE Certified</strong><br>
-                Certified Authorised Person (AP – MGPS, HTM 02-01)
-              </p>
-            </div>
-          </div>
-        </body>
-        </html>
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<style>
+
+body{
+font-family:Arial,sans-serif;
+background:#f5f7fb;
+color:#333;
+}
+
+.container{
+max-width:650px;
+margin:auto;
+background:#fff;
+border-radius:10px;
+overflow:hidden;
+box-shadow:0 5px 15px rgba(0,0,0,.1);
+}
+
+.header{
+background:linear-gradient(135deg,#2563EB,#06B6D4);
+color:#fff;
+padding:35px;
+text-align:center;
+}
+
+.content{
+padding:35px;
+line-height:1.8;
+}
+
+.services{
+background:#f8fafc;
+padding:20px;
+border-radius:10px;
+margin-top:25px;
+}
+
+.footer{
+background:#0F172A;
+color:#fff;
+padding:20px;
+text-align:center;
+font-size:14px;
+}
+
+.button{
+display:inline-block;
+padding:14px 30px;
+background:#2563EB;
+color:white;
+text-decoration:none;
+border-radius:8px;
+margin-top:25px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="header">
+
+<h1>Thank You, ${name}! 👋</h1>
+
+<p>We've received your inquiry.</p>
+
+</div>
+
+<div class="content">
+
+<p>
+
+Thank you for reaching out to <strong>Vedaham Technology</strong>.
+
+</p>
+
+<p>
+
+Our team has received your inquiry and one of our experts will contact you within the next 24 hours to discuss your project.
+
+</p>
+
+<div class="services">
+
+<h3>Your Details</h3>
+
+<ul>
+
+<li><strong>Company:</strong> ${escapeHtml(companyName)}</li>
+
+<li><strong>Project Budget:</strong> ${escapeHtml(projectBudget)}</li>
+
+<li><strong>Subject:</strong> ${escapeHtml(subject)}</li>
+
+</ul>
+
+</div>
+
+<h3>Your Message</h3>
+
+<p style="background:#f8fafc;padding:15px;border-left:4px solid #2563EB;">
+
+${formatMultiline(message)}
+
+</p>
+
+<div class="services">
+
+<h3>What We Can Build For You</h3>
+
+<ul>
+
+<li>🌐 Website Development</li>
+
+<li>📱 Mobile App Development</li>
+
+<li>⚙️ Custom Software Development</li>
+
+<li>🎨 UI/UX Design</li>
+
+</ul>
+
+</div>
+
+<div class="services">
+
+<h3>Why Choose Vedaham Technology?</h3>
+
+<ul>
+
+<li>✔ Since 2016</li>
+
+<li>✔ 180+ Successful Projects</li>
+
+<li>✔ Clients in 24+ Countries</li>
+
+<li>✔ Scalable & Secure Solutions</li>
+
+<li>✔ ISO 27001 Aligned Development</li>
+
+<li>✔ Dedicated Development Team</li>
+
+</ul>
+
+</div>
+
+<p>
+
+Whether you're building a startup MVP, business website, enterprise software, or mobile application, we're excited to help bring your vision to life.
+
+</p>
+
+<a class="button" href="https://vedahamtechnology.com">
+
+Visit Our Website
+
+</a>
+
+</div>
+
+<div class="footer">
+
+<h3>Vedaham Technology</h3>
+
+<p>
+
+📍 Indore, Madhya Pradesh, India
+
+</p>
+
+<p>
+
+🌐 https://vedahamtechnology.com
+
+</p>
+
+<p>
+
+Building Digital Products That Scale.
+
+</p>
+
+</div>
+
+</div>
+
+</body>
+
+</html>
       `,
     };
 
