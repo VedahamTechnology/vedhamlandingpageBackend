@@ -20,6 +20,9 @@ const formatMultiline = (value = "") =>
 
 const isMissing = (value) => value === undefined || value === null || String(value).trim() === "";
 
+const EMAIL_USER = (process.env.EMAIL_USER || "").trim();
+const EMAIL_PASSWORD = (process.env.EMAIL_PASSWORD || "").replace(/\s+/g, "");
+
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
@@ -53,20 +56,27 @@ app.post("/api/contact", async (req, res) => {
   }
 
   try {
+    if (isMissing(EMAIL_USER) || isMissing(EMAIL_PASSWORD)) {
+      return res.status(500).json({
+        success: false,
+        error: "Email configuration is missing",
+      });
+    }
+
     // Create transporter
     const transporter = nodemailer.createTransport({
       host: "smtp.gmail.com",
       port: 587,
       secure: false,
       auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASSWORD,
+        user: EMAIL_USER,
+        pass: EMAIL_PASSWORD,
       },
     });
 
     // Email to company
     const mailOptionsToCompany = {
-      from: process.env.EMAIL_USER,
+      from: EMAIL_USER,
       to: "gitamediline@gmail.com",
       subject: `🚀 New Project Inquiry: ${subject} - ${companyName}`,
 
@@ -178,7 +188,7 @@ Submitted through the Vedaham Technology website.
 
     // Email confirmation to user
     const mailOptionsToUser = {
-      from: process.env.EMAIL_USER,
+      from: EMAIL_USER,
       to: email,
       subject: "Thank You for Contacting Vedaham Technology",
 
